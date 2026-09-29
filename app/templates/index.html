@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invoice Extractor</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">DOCUMENT INTELLIGENCE</p>
+      <h1>Extract invoice data<br>without the spreadsheet work.</h1>
+      <p class="subtle">Upload an invoice and receive structured JSON and a formatted Excel workbook.</p>
+    </section>
+    <section class="card">
+      <form id="upload-form">
+        <label class="dropzone" for="invoice">
+          <input id="invoice" name="invoice" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" required>
+          <span class="upload-icon">↑</span>
+          <strong id="file-label">Choose a document</strong>
+          <small>PDF, PNG, JPG, or WEBP · up to {{ max_upload_mb }} MB</small>
+        </label>
+        <button id="submit" type="submit">Extract data</button>
+      </form>
+      <p id="status" role="status"></p>
+      <section id="result" hidden>
+        <div class="result-heading"><h2>Extraction complete</h2><span id="summary"></span></div>
+        <div class="downloads">
+          <a id="json-link" class="button secondary">Download JSON</a>
+          <a id="excel-link" class="button">Download Excel</a>
+        </div>
+        <details><summary>View extracted data</summary><pre id="data"></pre></details>
+      </section>
+    </section>
+  </main>
+  <script>
+    const form = document.querySelector('#upload-form');
+    const file = document.querySelector('#invoice');
+    const button = document.querySelector('#submit');
+    const status = document.querySelector('#status');
+    const result = document.querySelector('#result');
+    file.addEventListener('change', () => document.querySelector('#file-label').textContent = file.files[0]?.name || 'Choose a document');
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault(); result.hidden = true; button.disabled = true; status.textContent = 'Reading document and extracting data…';
+      try {
+        const response = await fetch('/api/extract', {method: 'POST', body: new FormData(form)});
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.detail || 'The extraction could not be completed.');
+        document.querySelector('#summary').textContent = `${payload.pages_processed} page(s) · ${payload.model}`;
+        document.querySelector('#json-link').href = payload.downloads.json;
+        document.querySelector('#excel-link').href = payload.downloads.excel;
+        document.querySelector('#data').textContent = JSON.stringify(payload.data, null, 2);
+        status.textContent = ''; result.hidden = false;
+      } catch (error) { status.textContent = error.message; }
+      finally { button.disabled = false; }
+    });
+  </script>
+</body>
+</html>
