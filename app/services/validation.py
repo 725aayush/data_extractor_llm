@@ -15,7 +15,7 @@ def _number(value: object) -> float | None:
 
 def validate_invoice(data: dict) -> dict:
     issues: list[object] = []
-    for name in ("document", "metadata", "seller", "buyer", "tables", "taxes", "totals", "pages"):
+    for name in ("document", "metadata", "seller", "buyer", "ship_to", "shipping", "tables", "taxes", "totals", "pages"):
         if name not in data:
             issues.append(f"Missing section: {name}")
     for name in ("tables", "taxes", "pages"):

@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     pdf_dpi: int = 180
     max_upload_mb: int = 20
     data_dir: Path = Path("data/jobs")
+    allowed_origins: list[str] = ["http://127.0.0.1:8000"]
+    sap_api_key: str = ""
 
     @property
     def models(self) -> list[str]:

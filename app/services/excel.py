@@ -19,7 +19,8 @@ def _sheet_name(name: object, used: set[str], fallback: str) -> str:
     return candidate
 
 
-def _table_frame(table: dict) -> pd.DataFrame:
+def table_frame(table: dict, include_traceability: bool = False) -> pd.DataFrame:
+    """Return document rows as a rectangular data frame."""
     columns = [str(c.get("name", "")).strip() for c in table.get("columns", []) if isinstance(c, dict) and str(c.get("name", "")).strip()]
     rows = []
     for row in table.get("rows", []):
@@ -29,8 +30,12 @@ def _table_frame(table: dict) -> pd.DataFrame:
         for key in cells:
             if str(key) not in columns:
                 columns.append(str(key))
-        rows.append({**{key: cells.get(key, "") for key in columns}, "_page": row.get("page", ""), "_confidence": row.get("confidence", "")})
-    return pd.DataFrame(rows, columns=columns + ["_page", "_confidence"])
+        item = {key: cells.get(key, "") for key in columns}
+        if include_traceability:
+            item.update({"_page": row.get("page", ""), "_confidence": row.get("confidence", "")})
+        rows.append(item)
+    trace_columns = ["_page", "_confidence"] if include_traceability else []
+    return pd.DataFrame(rows, columns=columns + trace_columns)
 
 
 def create_excel(data: dict, output_path: Path) -> None:
@@ -45,7 +50,7 @@ def create_excel(data: dict, output_path: Path) -> None:
             used.add("Invoice Info")
         for number, table in enumerate(data.get("tables", []), start=1):
             if isinstance(table, dict):
-                frame = _table_frame(table)
+                frame = table_frame(table, include_traceability=True)
                 if not frame.empty:
                     frame.to_excel(writer, sheet_name=_sheet_name(table.get("title") or table.get("table_id"), used, f"Table {number}"), index=False)
         for source, title in (("taxes", "Taxes"), ("other_information", "Other Info"), ("pages", "Pages")):

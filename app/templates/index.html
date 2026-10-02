@@ -11,7 +11,7 @@
     <section class="hero">
       <p class="eyebrow">DOCUMENT INTELLIGENCE</p>
       <h1>Extract invoice data<br>without the spreadsheet work.</h1>
-      <p class="subtle">Upload an invoice and receive structured JSON and a formatted Excel workbook.</p>
+      <p class="subtle">Upload an invoice and receive separate metadata and extracted-table workbooks.</p>
     </section>
     <section class="card">
       <form id="upload-form">
@@ -27,10 +27,10 @@
       <section id="result" hidden>
         <div class="result-heading"><h2>Extraction complete</h2><span id="summary"></span></div>
         <div class="downloads">
-          <a id="json-link" class="button secondary">Download JSON</a>
-          <a id="excel-link" class="button">Download Excel</a>
+          <a id="metadata-link" class="button secondary">Download metadata</a>
+          <a id="extracted-excel-link" class="button">Download extracted Excel</a>
         </div>
-        <details><summary>View extracted data</summary><pre id="data"></pre></details>
+        <section class="table-preview"><h3>Extracted data preview</h3><div id="table-container"></div></section>
       </section>
     </section>
   </main>
@@ -48,13 +48,23 @@
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.detail || 'The extraction could not be completed.');
         document.querySelector('#summary').textContent = `${payload.pages_processed} page(s) · ${payload.model}`;
-        document.querySelector('#json-link').href = payload.downloads.json;
-        document.querySelector('#excel-link').href = payload.downloads.excel;
-        document.querySelector('#data').textContent = JSON.stringify(payload.data, null, 2);
+        document.querySelector('#metadata-link').href = payload.downloads.metadata;
+        document.querySelector('#extracted-excel-link').href = payload.downloads['extracted-excel'];
+        renderRecords(payload.tabular_data);
         status.textContent = ''; result.hidden = false;
       } catch (error) { status.textContent = error.message; }
       finally { button.disabled = false; }
     });
+    function renderRecords(data) {
+      const container = document.querySelector('#table-container');
+      container.replaceChildren();
+      if (!data.records.length) { container.textContent = 'No extracted data was found in this document.'; return; }
+      const tableElement = document.createElement('table');
+      const header = tableElement.insertRow();
+      data.columns.forEach(column => { const cell = document.createElement('th'); cell.textContent = column; header.append(cell); });
+      data.records.forEach(row => { const rowElement = tableElement.insertRow(); data.columns.forEach(column => { const cell = rowElement.insertCell(); cell.textContent = row[column] ?? ''; }); });
+      container.append(tableElement);
+    }
   </script>
 </body>
 </html>

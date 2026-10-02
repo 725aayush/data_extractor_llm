@@ -14,6 +14,8 @@ Return exactly one JSON object with this structure:
  "metadata":{"invoice_number":"","invoice_date":"","due_date":"","po_number":"","reference_number":"","payment_terms":""},
  "seller":{"name":"","address":"","tax_id":"","phone":"","email":""},
  "buyer":{"name":"","address":"","tax_id":"","phone":"","email":""},
+ "ship_to":{"name":"","address":"","tax_id":"","phone":"","email":""},
+ "shipping":{"ship_from":"","place_of_supply":"","transportation_mode":"","vehicle_no":"","packing_details":""},
  "tables":[{"table_id":"","title":"","pages":[1],"confidence":0.0,"columns":[{"name":"","semantic_type":"","inferred":false,"confidence":0.0}],"rows":[{"cells":{"Column Name":"value"},"page":1,"confidence":0.0}]}],
  "taxes":[{"name":"","rate":"","amount":"","page":1,"confidence":0.0}],
  "totals":{"subtotal":"","discount":"","shipping":"","tax":"","grand_total":"","amount_paid":"","balance_due":""},
@@ -21,5 +23,5 @@ Return exactly one JSON object with this structure:
  "pages":[{"page":1,"summary":""}],
  "validation":{"needs_review":false,"issues":[]}
 }
-Use empty strings for missing scalar values. Tables must reflect the actual document.
+Use empty strings for missing scalar values. Tables must reflect the actual document. For goods line items, use these column names whenever they exist in the source: Item No., Description, HSN, Quantity, Rate, Unit, Amount, Taxable Value, GST Rate, GST Amount. Preserve any additional source columns.
 """
